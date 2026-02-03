@@ -16,7 +16,8 @@ export const RouteMap = ({ routeData, origin, destination, waypoints = [] }) => 
   const mapRef = useRef(null);
   const map = useRef(null);
   const platform = useRef(null);
-  const apiKey = import.meta.env.VITE_HERE_API_KEY;
+  // Publishable HERE API key (restricted by domain in HERE dashboard)
+  const apiKey = '6ZJe_8D4bEeIQ0QzFJaTxz1BThvxl2LHE4WbH0SqSgU';
   const markerRefs = useRef([]);
 
   const addMarkerToMap = (lat, lng, color, id, data = null) => {
