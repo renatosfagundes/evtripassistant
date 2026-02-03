@@ -1,73 +1,129 @@
-# Welcome to your Lovable project
+# EV Trip Assistant
 
-## Project info
+## Overview
+EV Trip Assistant is a full-stack web application for planning electric vehicle (EV) trips with optimal charging stops, route visualization, and trip statistics. It leverages HERE Maps for route display and a custom backend for trip calculation, energy, and cost estimation.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+---
 
-## How can I edit this code?
+## Features
+- **EV Trip Planning**: Enter origin, destination, and vehicle data to get a full trip plan with charging stops.
+- **HERE Maps Integration**: Interactive map with origin, destination, charging stop markers, and route polylines.
+- **Automatic Map Fitting**: Map view automatically adjusts to show the entire route and all stops.
+- **Trip Statistics**: Displays distance, duration, energy, and cost estimates.
+- **Error Feedback**: User-friendly error messages and suggestions.
+- **Modern UI**: Built with React, Vite, Tailwind CSS, and component libraries.
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## Workflow
+1. **User Input**: User fills out the trip form (origin, destination, vehicle specs).
+2. **Backend Request**: Frontend sends a POST request to `/api/trip/plan` with trip data.
+3. **Backend Processing**: Backend calculates the route, charging stops, and returns:
+   - `origin`, `destination`, `chargingStops`
+   - `distanceTotal`, `durationTotal`, `requiredStops`
+   - `polylines`: Array of flexible polyline strings (one per route segment)
+   - `polyline`: (optional) Full route polyline
+4. **Frontend Mapping**: RouteMap component:
+   - Plots all polylines and markers
+   - Fits map bounds to show the entire trip
+   - Displays trip info and error feedback
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## Main Tools & Libraries
+- **Frontend**:
+  - React (Vite)
+  - TypeScript
+  - Tailwind CSS
+  - HERE Maps JS API v3.1 (loaded via `index.html`)
+  - Framer Motion (animations)
+  - Lucide React (icons)
+- **Backend**:
+  - Node.js/Express (API)
+  - HERE Routing API (trip/route calculation)
+- **Testing**:
+  - Vitest
 
-**Use your preferred IDE**
+---
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+## Project Structure
+```
+├── public/
+│   └── robots.txt
+├── src/
+│   ├── App.tsx, main.tsx, App.css, index.css
+│   ├── components/
+│   │   ├── RouteMap.tsx         # Map rendering, markers, polylines, auto-fit
+│   │   ├── RouteCard.tsx        # Trip summary card
+│   │   ├── Dashboard.tsx        # Stats dashboard
+│   │   ├── ChatBot.tsx          # Assistant/chat
+│   │   ├── EVForm.tsx           # Trip input form
+│   │   └── ui/                  # UI primitives (button, tabs, etc)
+│   ├── hooks/                   # Custom React hooks
+│   ├── lib/                     # API, calculations, utilities
+│   ├── pages/
+│   │   ├── Index.tsx            # Main landing page, trip workflow
+│   │   └── EVTripPlanner.tsx    # (Optional) Standalone trip planner
+│   └── test/                    # Vitest tests
+├── package.json
+├── tailwind.config.ts
+├── vite.config.ts
+└── README.md
 ```
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Key Files & Navigation
+- **src/pages/Index.tsx**: Main entry, handles trip form, backend calls, error feedback, and renders RouteMap.
+- **src/components/RouteMap.tsx**: Core map logic. Accepts `routeData` prop with `origin`, `destination`, `chargingStops`, and `polylines`. Plots all segments and markers, auto-fits map.
+- **src/components/EVForm.tsx**: User input for trip planning.
+- **src/lib/api.ts**: API calls to backend.
+- **src/lib/evCalculations.ts**: Utility functions for EV range, energy, and cost.
+- **src/components/ui/**: Reusable UI components (button, tabs, toast, etc).
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## How to Run
+1. **Install dependencies**:
+   ```sh
+   npm install
+   ```
+2. **Set HERE Maps API Key**:
+   - Add your key to `.env` as `VITE_HERE_API_KEY=your_key_here`
+3. **Start the backend** (if separate):
+   ```sh
+   npm run backend
+   # or follow backend/README.md
+   ```
+4. **Start the frontend**:
+   ```sh
+   npm run dev
+   ```
+5. **Open**: Visit `http://localhost:5173` (or as shown in terminal)
 
-## What technologies are used for this project?
+---
 
-This project is built with:
+## Customization & Extending
+- **Add new UI components**: Place in `src/components/` or `src/components/ui/`.
+- **Change map logic**: Edit `RouteMap.tsx` for marker, polyline, or fit behavior.
+- **Backend logic**: Update backend API to change route/stop calculation or response shape.
+- **Testing**: Add tests in `src/test/` using Vitest.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+---
 
-## How can I deploy this project?
+## Troubleshooting
+- **Map not showing**: Check HERE Maps API key, network, and browser console for errors.
+- **Markers or polylines missing**: Ensure backend returns correct `origin`, `destination`, `chargingStops`, and `polylines`.
+- **Route not fully visible**: RouteMap auto-fits bounds; check for invalid coordinates or missing segments.
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
+## Credits
+- HERE Maps JS API
+- React, Vite, Tailwind CSS
+- All contributors and open-source libraries used
 
-Yes, you can!
+---
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## License
+MIT License (see LICENSE file)

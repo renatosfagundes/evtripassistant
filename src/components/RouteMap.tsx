@@ -16,7 +16,7 @@ export const RouteMap = ({ routeData, origin, destination, waypoints = [] }) => 
   const mapRef = useRef(null);
   const map = useRef(null);
   const platform = useRef(null);
-  const apiKey = import.meta.env.VITE_HERE_API_KEY;
+  const apiKey = Deno.env.get('HERE_API_KEY');
   const markerRefs = useRef([]);
 
   const addMarkerToMap = (lat, lng, color, id, data = null) => {

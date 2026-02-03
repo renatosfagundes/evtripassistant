@@ -1,7 +1,7 @@
 // src/lib/api.ts
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ev-trip-assistant.onrender.com';
+const BASE_URL = 'https://ev-trip-assistant.onrender.com';
 
 export async function getChargingStations(lat: number, lon: number, range?: number) {
   const params: Record<string, any> = { lat, lon };
