@@ -32,17 +32,9 @@ export const Dashboard = ({ tripData, routeResult, onRefresh }: DashboardProps) 
     ? vehicleConsumption[tripData.vehicleModel] || 16
     : '--';
 
-  const estimatedCost = routeResult
-    ? `R$ ${routeResult.costEstimate.toFixed(2)}`
-    : 'R$ --';
-
-  const efficiency = tripData && routeResult
-    ? routeResult.energyConsumption < (routeResult.totalDistance * 0.18)
-      ? 'up'
-      : routeResult.energyConsumption > (routeResult.totalDistance * 0.20)
-      ? 'down'
-      : 'neutral'
-    : undefined;
+  // No costEstimate or energyConsumption in new RouteResult
+  const estimatedCost = 'R$ --';
+  const efficiency = undefined;
 
   return (
     <div className="space-y-4">
@@ -83,13 +75,7 @@ export const Dashboard = ({ tripData, routeResult, onRefresh }: DashboardProps) 
           trend={efficiency}
           tooltip="Consumo médio do veículo"
         />
-        <MetricCard
-          title="Custo Estimado"
-          value={estimatedCost}
-          icon={DollarSign}
-          variant="default"
-          tooltip="Custo baseado em R$0,50/kWh"
-        />
+        {/* Custo Estimado removed: not available in new RouteResult */}
       </div>
 
       {/* Chart */}
@@ -105,7 +91,7 @@ export const Dashboard = ({ tripData, routeResult, onRefresh }: DashboardProps) 
         </div>
         
         <div className="h-48">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={192} minWidth={200} minHeight={120}>
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="consumoGradient" x1="0" y1="0" x2="0" y2="1">

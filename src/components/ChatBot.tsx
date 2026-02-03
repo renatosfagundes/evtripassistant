@@ -4,8 +4,7 @@ import { Send, Trash2, MessageCircle, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ChatMessage, { Message } from './ChatMessage';
-import { findResponse } from '@/lib/chatResponses';
-import { simulateApiDelay } from '@/lib/evCalculations';
+import { sendChatbotMessage } from '@/lib/api';
 
 const INITIAL_MESSAGE: Message = {
   id: '0',
@@ -71,20 +70,33 @@ export const ChatBot = () => {
     setInput('');
     setIsTyping(true);
 
-    // Simulate typing delay
-    await simulateApiDelay(800, 2000);
-
-    const response = findResponse(userMessage.content);
-    const assistantMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      content: response,
-      sender: 'assistant',
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, assistantMessage]);
-    setIsTyping(false);
-    inputRef.current?.focus();
+    try {
+      const response = await sendChatbotMessage(userMessage.content);
+      let content = 'Desculpe, não consegui responder.';
+      if (response && response.response) {
+        content = response.response;
+      }
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content,
+        sender: 'assistant',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 2).toString(),
+          content: 'Erro ao conectar ao assistente. Tente novamente.',
+          sender: 'assistant',
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setIsTyping(false);
+      inputRef.current?.focus();
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

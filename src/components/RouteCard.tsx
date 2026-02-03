@@ -27,23 +27,9 @@ export const RouteCard = ({ result, origin, destination }: RouteCardProps) => {
     {
       icon: Clock,
       label: 'Tempo Estimado',
-      value: formatTime(result.estimatedTime),
+      value: result.durationTotal || '',
       unit: '',
       color: 'text-ev-blue',
-    },
-    {
-      icon: Zap,
-      label: 'Consumo Energético',
-      value: `${result.energyConsumption}`,
-      unit: 'kWh',
-      color: 'text-primary',
-    },
-    {
-      icon: DollarSign,
-      label: 'Custo Estimado',
-      value: `R$ ${result.costEstimate.toFixed(2)}`,
-      unit: '',
-      color: 'text-accent',
     },
   ];
 
@@ -58,7 +44,11 @@ export const RouteCard = ({ result, origin, destination }: RouteCardProps) => {
       <div className="flex items-center gap-3 mb-5 pb-4 border-b border-border">
         <div className="flex-1 flex items-center gap-2">
           <MapPin className="w-4 h-4 text-ev-green" />
-          <span className="text-sm font-medium truncate">{origin}</span>
+            <span className="text-sm font-medium truncate" title={result.origin.displayName}>
+              {result.origin.displayName.length > 32
+                ? result.origin.displayName.slice(0, 32) + '...'
+                : result.origin.displayName}
+            </span>
         </div>
         <motion.div
           animate={{ x: [0, 5, 0] }}
@@ -68,7 +58,11 @@ export const RouteCard = ({ result, origin, destination }: RouteCardProps) => {
           <span className="text-muted-foreground">→</span>
         </motion.div>
         <div className="flex-1 flex items-center gap-2 justify-end">
-          <span className="text-sm font-medium truncate">{destination}</span>
+            <span className="text-sm font-medium truncate" title={result.destination.displayName}>
+              {result.destination.displayName.length > 32
+                ? result.destination.displayName.slice(0, 32) + '...'
+                : result.destination.displayName}
+            </span>
           <MapPin className="w-4 h-4 text-secondary" />
         </div>
       </div>
@@ -98,22 +92,7 @@ export const RouteCard = ({ result, origin, destination }: RouteCardProps) => {
       </div>
 
       {/* Charging Info */}
-      {result.stopsNeeded > 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20"
-        >
-          <p className="text-sm text-foreground">
-            <Zap className="w-4 h-4 inline mr-1 text-primary" />
-            <strong>Tempo de carregamento:</strong> ~{result.chargingTime} minutos
-            <span className="text-muted-foreground ml-1">
-              ({result.stopsNeeded} {result.stopsNeeded === 1 ? 'parada' : 'paradas'} de ~25min)
-            </span>
-          </p>
-        </motion.div>
-      )}
+      {/* Optionally show charging stops or summary here if needed */}
     </motion.div>
   );
 };

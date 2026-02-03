@@ -7,11 +7,17 @@ import EVForm from '@/components/EVForm';
 import RouteCard from '@/components/RouteCard';
 import ChatBot from '@/components/ChatBot';
 import Dashboard from '@/components/Dashboard';
-import { TripData, RouteResult, calculateRoute } from '@/lib/evCalculations';
+import { TripData, RouteResult } from '@/lib/evCalculations';
+import { planTrip, getEfficiencyDashboard } from '@/lib/api';
+import { toast } from '@/components/ui/use-toast';
+import { RouteMap } from '@/components/RouteMap';
 
 const Index = () => {
+  type RouteErrorType = { message: string; suggestion?: string } | null;
   const [tripData, setTripData] = useState<TripData | null>(null);
   const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
+  const [routeMapData, setRouteMapData] = useState<any | null>(null);
+  const [routeError, setRouteError] = useState<RouteErrorType>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [formCollapsed, setFormCollapsed] = useState(false);
@@ -19,32 +25,135 @@ const Index = () => {
 
   const handleCalculateRoute = async (data: TripData) => {
     setIsLoading(true);
+    setRouteMapData(null);
+    setRouteError(null);
     try {
-      const result = await calculateRoute(data);
-      setTripData(data);
-      setRouteResult(result);
-      // On mobile, collapse form after calculation
-      if (window.innerWidth < 1024) {
-        setFormCollapsed(true);
+      const autonomy = data.batteryRange;
+      const response = await planTrip(data.origin, data.destination, autonomy);
+      if (response.success && response.data) {
+        const backend = response.data;
+        // If backend error object exists, show formatted error window
+        if (backend.error) {
+          setRouteError({
+            message: backend.error.message,
+            suggestion: backend.error.suggestion,
+          });
+          toast({
+            title: 'Erro ao calcular rota',
+            description: backend.error.message,
+            variant: 'destructive',
+          });
+          return;
+        }
+        // Map backend response to RouteResult shape if needed
+        const result: RouteResult = {
+          totalDistance: backend.distanceTotal,
+          stopsNeeded: backend.requiredStops,
+          durationTotal: backend.durationTotal || '',
+          origin: backend.origin,
+          destination: backend.destination,
+          chargingStops: backend.chargingStops || [],
+        };
+        setTripData(data);
+        setRouteResult(result);
+        setRouteMapData({
+          polyline: backend.routeGeometry,
+          origin: {
+            lat: backend.origin.lat,
+            lng: backend.origin.lon,
+            name: backend.origin.displayName,
+          },
+          destination: {
+            lat: backend.destination.lat,
+            lng: backend.destination.lon,
+            name: backend.destination.displayName,
+          },
+          chargingStops: (backend.chargingStops || []).map(stop => ({
+            lat: stop.lat,
+            lng: stop.lon,
+            name: stop.name,
+            address: stop.address,
+            chargingTime: stop.chargingTime,
+            id: stop.id,
+          })),
+          distance: backend.distanceTotal * 1000,
+          duration: backend.durationTotal,
+        });
+        if (window.innerWidth < 1024) {
+          setFormCollapsed(true);
+        }
+      } else {
+        let errorMsg = response.message || 'Erro desconhecido do servidor.';
+        if (response.chatMessage) {
+          errorMsg += '\n\n' + response.chatMessage;
+        }
+        setRouteError({ message: errorMsg });
+        toast({
+          title: 'Erro ao calcular rota',
+          description: errorMsg,
+          variant: 'destructive',
+        });
       }
-    } catch (error) {
-      console.error('Error calculating route:', error);
+    } catch (error: any) {
+      setRouteError(error?.message || 'Erro desconhecido ao conectar ao servidor.');
+      toast({
+        title: 'Erro de rede',
+        description: error?.message || 'Erro desconhecido ao conectar ao servidor.',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleRefreshDashboard = async () => {
-    if (tripData) {
+    if (tripData && routeResult) {
       setIsLoading(true);
-      const result = await calculateRoute(tripData);
-      setRouteResult(result);
-      setIsLoading(false);
+      try {
+        // Use totalDistance and battery percentage for dashboard
+        const dist = routeResult.totalDistance;
+        const bat = tripData.currentCharge;
+        const response = await getEfficiencyDashboard(dist, bat);
+        if (response.success && response.data) {
+          // Optionally, update routeResult with new metrics if needed
+          // Optionally, update routeResult with new metrics if needed
+          // No costEstimate field anymore
+          // Optionally, store consumptionGraph in state if needed for chart
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar dashboard:', error);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {/* Error Window for Route Calculation */}
+      <AnimatePresence>
+        {routeError && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-8 left-1/2 z-[100] w-full max-w-lg -translate-x-1/2 bg-destructive text-destructive-foreground border border-destructive rounded-lg shadow-lg p-6 flex flex-col gap-3"
+            style={{ whiteSpace: 'pre-line' }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="font-bold text-lg">Erro ao calcular rota</div>
+              <X className="w-5 h-5 flex-shrink-0 cursor-pointer" onClick={() => setRouteError(null)} role="button" aria-label="Fechar erro" />
+            </div>
+            <div className="text-base font-semibold mb-2">{routeError.message}</div>
+            {routeError.suggestion && (
+              <div className="bg-background/80 rounded-md p-3 text-sm overflow-y-auto max-h-96 border border-border">
+                <div className="font-bold mb-2">Sugestão e Explicação</div>
+                <div dangerouslySetInnerHTML={{ __html: routeError.suggestion.replace(/\n/g, '<br/>') }} />
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Header */}
       <header className="sticky top-0 z-50 glass-card border-b border-border">
         <div className="container mx-auto px-4 py-3">
@@ -181,6 +290,12 @@ const Index = () => {
                 </motion.div>
               )}
             </AnimatePresence>
+            {/* Show RouteMap after successful route calculation */}
+            {routeMapData && (
+              <div className="mt-6">
+                <RouteMap routeData={routeMapData} onRouteLoad={() => {}} />
+              </div>
+            )}
           </div>
 
           {/* Right Column - Dashboard & Chat */}
