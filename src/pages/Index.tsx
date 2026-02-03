@@ -293,7 +293,12 @@ const Index = () => {
             {/* Show RouteMap after successful route calculation */}
             {routeMapData && (
               <div className="mt-6">
-                <RouteMap routeData={routeMapData} onRouteLoad={() => {}} />
+                <RouteMap 
+                  routeData={routeMapData} 
+                  origin={routeMapData.origin}
+                  destination={routeMapData.destination}
+                  waypoints={routeMapData.chargingStops}
+                />
               </div>
             )}
           </div>

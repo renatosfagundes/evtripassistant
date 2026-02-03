@@ -3,25 +3,28 @@
 export interface RouteResult {
   totalDistance: number;
   stopsNeeded: number;
-  durationTotal: string; // formatted string, e.g. "9h 19min"
-  origin: {
+  durationTotal?: string; // formatted string, e.g. "9h 19min"
+  estimatedTime?: number; // in minutes (for backwards compatibility)
+  energyConsumption?: number;
+  chargingTime?: number;
+  costEstimate?: number;
+  origin?: {
     lat: number;
     lon: number;
     displayName: string;
   };
-  destination: {
+  destination?: {
     lat: number;
     lon: number;
     displayName: string;
   };
-  chargingStops: Array<{
+  chargingStops?: Array<{
     lat: number;
     lon: number;
     name: string;
     id: string;
     chargingTime: number;
   }>;
-  
 }
 
 export interface TripData {
