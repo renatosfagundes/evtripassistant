@@ -3,17 +3,7 @@ import { TripForm } from '../components/TripForm';
 import { RouteMap } from '../components/RouteMap';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Clock, Zap } from 'lucide-react';
-
-// Utility: fetch trip plan from backend
-async function fetchTripPlan({ origin, destination, autonomy }: { origin: string; destination: string; autonomy: number }) {
-  const res = await fetch('/api/trip/plan', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ origin, destination, autonomy }),
-  });
-  if (!res.ok) throw new Error('Failed to fetch trip plan');
-  return res.json();
-}
+import { planTrip } from '@/lib/api';
 
 // RouteInfo component
 const RouteInfo = ({ routeStats }: { routeStats: any }) => {
@@ -92,7 +82,8 @@ export default function EVTripPlanner() {
     setRouteData(null);
     setRouteStats(null);
     try {
-      const data = await fetchTripPlan(formData);
+      const response = await planTrip(formData.origin, formData.destination, formData.autonomy);
+      const data = response?.data || response;
       setRouteData(data);
       // Extract stats from routeData
       if (data) {
